@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: grape-master-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: grape_master
+    ports:
+      - '5433:5432'
+    volumes:
+      - gm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: grape-master-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - gm_redis:/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: grape-master-api
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/grape_master?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=change-this-to-a-long-random-string-in-production
+      - FRONTEND_URL=http://localhost:3000
+    volumes:
+      - gm_receipts:/app/receipts
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  ml:
+    build:
+      context: ./ml
+    container_name: grape-master-ml
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/grape_master?schema=public
+    volumes:
+      - gm_models:/app/models
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: grape-master-web
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+    depends_on:
+      - backend
+
+volumes:
+  gm_pgdata:
+  gm_redis:
+  gm_models:
+  gm_receipts:

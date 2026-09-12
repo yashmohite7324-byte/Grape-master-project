@@ -1,0 +1,203 @@
+/* SlidingAuthCard.css */
+
+.auth-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
+}
+
+.auth-card {
+  position: relative;
+  overflow: hidden;
+  width: 780px;
+  max-width: 100%;
+  min-height: 520px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.dark .auth-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.auth-card-bg {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50%;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.9), rgba(16, 185, 129, 0.85)), url("/images/hero.jpg");
+  background-size: cover;
+  background-position: center;
+  border-radius: 18px;
+  transform: translate(0, 0);
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.auth-card-bg.login {
+  transform: translate(100%, 0);
+}
+
+.auth-hero,
+.auth-form {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.65s ease-in-out, transform 0.65s cubic-bezier(0.65, 0, 0.35, 1), visibility 0.65s;
+}
+
+.auth-hero.active,
+.auth-form.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.auth-form.register {
+  left: 50%;
+  transform: translate(100%, 0);
+}
+
+.auth-form.register.active {
+  transform: translate(0, 0);
+}
+
+.auth-hero.login {
+  left: 50%;
+  transform: translate(100%, 0);
+}
+
+.auth-hero.login.active {
+  transform: translate(0, 0);
+}
+
+.auth-hero.register {
+  left: 0;
+  transform: translate(-100%, 0);
+}
+
+.auth-hero.register.active {
+  transform: translate(0, 0);
+}
+
+.auth-hero {
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 50%;
+  color: #ffffff;
+  text-align: center;
+  padding: 0 28px;
+}
+
+.auth-hero h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.auth-hero p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #f1f5f9;
+}
+
+.auth-hero button {
+  padding: 10px 32px;
+  border-radius: 32px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  background: transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.auth-hero button:hover {
+  color: #064e3b;
+  background: #ffffff;
+  transform: scale(1.03);
+}
+
+.auth-form {
+  z-index: 1;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 28px;
+  overflow-y: auto;
+}
+
+.auth-form.login {
+  left: 0;
+  transform: translate(-100%, 0);
+}
+
+.auth-form.login.active {
+  transform: translate(0, 0);
+}
+
+.auth-sso {
+  display: flex;
+  gap: 12px;
+}
+
+.auth-sso-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.auth-sso-btn:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #ecfdf5;
+}
+
+@media (max-width: 640px) {
+  .auth-card {
+    height: auto;
+    min-height: 580px;
+  }
+  .auth-card-bg {
+    display: none;
+  }
+  .auth-hero {
+    display: none;
+  }
+  .auth-form {
+    position: relative;
+    width: 100%;
+    left: 0 !important;
+    transform: none !important;
+  }
+}

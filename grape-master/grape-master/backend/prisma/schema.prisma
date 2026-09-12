@@ -1,0 +1,533 @@
+// Grape Master — PostgreSQL schema (Prisma)
+// Covers the entire system; Phase 1 uses the User/Profile/Auth portion.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── ENUMS ───────────────────────────
+
+enum UserRole {
+  FARMER
+  BROKER
+  FERTILIZER_SELLER
+  CUSTOMER
+  ADMIN
+}
+
+enum ProductType {
+  PRODUCE
+  FERTILIZER
+}
+
+enum FarmerListingStatus {
+  ACTIVE
+  SOLD
+  EXPIRED
+  CANCELLED
+}
+
+enum BrokerOfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CONFIRMED
+  PROCESSING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  PHONEPE
+}
+
+enum FulfillmentMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderType {
+  BROKER_PRODUCE
+  FERTILIZER
+}
+
+enum UserBehaviorEvent {
+  PRODUCT_VIEW
+  SEARCH
+  CLICK
+  ADD_TO_CART
+  REMOVE_FROM_CART
+  PURCHASE
+  WISHLIST
+  RECOMMENDATION_VIEW
+  RECOMMENDATION_CLICK
+}
+
+// ─────────────────────── USERS & PROFILES ───────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(CUSTOMER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile         Profile?
+  farmerProfile   FarmerProfile?
+  brokerProfile   BrokerProfile?
+  sellerProfile   FertilizerSellerProfile?
+  addresses       Address[]
+  farmerListings  FarmerListing[]
+  brokerOffers    BrokerOffer[]
+  brokerPurchases BrokerPurchase[]
+  brokerInventory BrokerInventory[]
+  products        Product[]
+  sellerInventory SellerInventory[]
+  ordersAsBuyer   Order[]         @relation("BuyerOrders")
+  ordersAsSeller  Order[]         @relation("SellerOrders")
+  txnAsBuyer      Transaction[]   @relation("TxnBuyer")
+  txnAsSeller     Transaction[]   @relation("TxnSeller")
+  recommendations Recommendation[]
+  userBehavior    UserBehavior[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  fullName     String
+  mobileNumber String
+  village      String?
+  district     String?
+  state        String?
+  pincode      String?
+  latitude     Float?
+  longitude    Float?
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([district])
+  @@index([state])
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  fullName     String
+  mobileNumber String
+  addressLine  String
+  village      String
+  district     String
+  state        String
+  pincode      String
+  latitude     Float?
+  longitude    Float?
+  isDefault    Boolean  @default(false)
+  addressType  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([userId])
+  @@index([pincode])
+}
+
+model FarmerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  farmName    String?
+  primaryCrop String
+  farmSize    Float?
+  experience  Int?
+  bankName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([primaryCrop])
+}
+
+model BrokerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  brokerName  String
+  companyName String?
+  bankName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FertilizerSellerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  sellerName  String
+  companyName String?
+  bankName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────── FARMER LISTINGS / BROKER ───────────────────
+
+model FarmerListing {
+  id                String              @id @default(cuid())
+  farmerId          String
+  cropType          String
+  variety           String?
+  quantity          Float
+  availableQuantity Float
+  unit              String
+  expectedPrice     Float
+  harvestDate       DateTime
+  latitude          Float?
+  longitude         Float?
+  description       String?
+  status            FarmerListingStatus @default(ACTIVE)
+  images            String[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  expiresAt         DateTime?
+
+  farmer       User          @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  brokerOffers BrokerOffer[]
+
+  @@index([farmerId])
+  @@index([cropType])
+  @@index([status])
+}
+
+model BrokerOffer {
+  id          String            @id @default(cuid())
+  listingId   String
+  brokerId    String
+  quantity    Float
+  offerPrice  Float
+  totalAmount Float
+  status      BrokerOfferStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  listing        FarmerListing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  broker         User            @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  brokerPurchase BrokerPurchase?
+
+  @@index([listingId])
+  @@index([brokerId])
+  @@index([status])
+}
+
+model BrokerPurchase {
+  id            String   @id @default(cuid())
+  brokerId      String
+  offerId       String   @unique
+  quantity      Float
+  purchasePrice Float
+  totalCost     Float
+  purchaseDate  DateTime @default(now())
+
+  broker    User              @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  offer     BrokerOffer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  inventory BrokerInventory[]
+
+  @@index([brokerId])
+}
+
+model BrokerInventory {
+  id                String   @id @default(cuid())
+  brokerId          String
+  purchaseId        String
+  productName       String
+  quantity          Float
+  availableQuantity Float
+  purchasePrice     Float
+  sellingPrice      Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  broker     User           @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  purchase   BrokerPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@index([brokerId])
+  @@index([availableQuantity])
+}
+
+// ─────────────────── PRODUCTS / SELLER STOCK ───────────────────
+
+model Product {
+  id          String      @id @default(cuid())
+  sellerId    String
+  name        String
+  description String?
+  category    String
+  productType ProductType @default(FERTILIZER)
+  brand       String?
+  unit        String
+  price       Float
+  isActive    Boolean     @default(true)
+  images      String[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  seller          User              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  inventory       SellerInventory[]
+  orderItems      OrderItem[]
+  recommendations Recommendation[]
+
+  @@index([sellerId])
+  @@index([category])
+}
+
+model SellerInventory {
+  id                String   @id @default(cuid())
+  sellerId          String
+  productId         String
+  quantity          Float
+  reservedQuantity  Float    @default(0)
+  availableQuantity Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  seller     User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@unique([sellerId, productId])
+  @@index([availableQuantity])
+}
+
+// ─────────────────── ORDERS / PAYMENTS ───────────────────
+
+model Order {
+  id                String            @id @default(cuid())
+  orderNumber       String            @unique
+  buyerId           String
+  sellerId          String
+  orderType         OrderType         @default(FERTILIZER)
+  subtotal          Float
+  deliveryCharge    Float             @default(0)
+  tax               Float             @default(0)
+  discount          Float             @default(0)
+  totalAmount       Float
+  paymentStatus     PaymentStatus     @default(PENDING)
+  orderStatus       OrderStatus       @default(PENDING_PAYMENT)
+  fulfillmentMethod FulfillmentMethod
+  shippingAddressId String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  buyer           User         @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller          User         @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  shippingAddress Address      @relation(fields: [shippingAddressId], references: [id])
+  orderItems      OrderItem[]
+  payment         Payment?
+  transaction     Transaction?
+  receipt         Receipt?
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([orderStatus])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                String   @id @default(cuid())
+  orderId           String
+  productId         String?
+  inventoryId       String?
+  brokerInventoryId String?
+  quantity          Float
+  unitPrice         Float
+  totalPrice        Float
+  createdAt         DateTime @default(now())
+
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product?         @relation(fields: [productId], references: [id])
+  sellerInventory SellerInventory? @relation(fields: [inventoryId], references: [id])
+  brokerInventory BrokerInventory? @relation(fields: [brokerInventoryId], references: [id])
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                   String         @id @default(cuid())
+  orderId              String         @unique
+  paymentReference     String         @unique
+  gateway              PaymentGateway @default(PHONEPE)
+  gatewayTransactionId String?        @unique
+  amount               Float
+  status               PaymentStatus  @default(PENDING)
+  paidAt               DateTime?
+  failureReason        String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model Transaction {
+  id                   String         @id @default(cuid())
+  transactionNumber    String         @unique
+  orderId              String         @unique
+  buyerId              String
+  sellerId             String
+  amount               Float
+  paymentMethod        String
+  gateway              PaymentGateway
+  gatewayTransactionId String?
+  transactionType      OrderType
+  status               PaymentStatus  @default(SUCCESS)
+  createdAt            DateTime       @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyer  User  @relation("TxnBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller User  @relation("TxnSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([createdAt])
+}
+
+model Receipt {
+  id            String   @id @default(cuid())
+  receiptNumber String   @unique
+  orderId       String   @unique
+  storagePath   String
+  pdfUrl        String?
+  generatedAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────── ML / RECOMMENDATIONS ───────────────────
+
+model WeatherData {
+  id               String   @id @default(cuid())
+  location         String
+  latitude         Float
+  longitude        Float
+  temperature      Float
+  humidity         Float
+  rainfall         Float
+  windSpeed        Float
+  weatherCondition String
+  recordedAt       DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([location])
+  @@index([recordedAt])
+}
+
+model UserBehavior {
+  id        String            @id @default(cuid())
+  userId    String
+  productId String?
+  eventType UserBehaviorEvent
+  sessionId String?
+  location  String?
+  metadata  Json?
+  timestamp DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+}
+
+model Recommendation {
+  id           String   @id @default(cuid())
+  userId       String
+  productId    String
+  modelVersion String
+  score        Float
+  reason       String?
+  generatedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([generatedAt])
+}
+
+// ─────────────────── AUDIT / NOTIFICATIONS ───────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String
+  isRead    Boolean   @default(false)
+  data      Json?
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}

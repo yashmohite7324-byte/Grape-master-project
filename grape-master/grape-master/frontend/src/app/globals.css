@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { @apply bg-paper text-ink font-sans; }
+  h1,h2,h3 { @apply font-display; }
+}
+
+@layer utilities {
+  .img-cover { @apply w-full h-full object-cover; }
+  .card-hover { @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg; }
+  .gradient-vine { background: linear-gradient(135deg, #1F6B4A 0%, #2D8A60 100%); }
+  .gradient-grape { background: linear-gradient(135deg, #6B3A5B 0%, #8B4E78 100%); }
+  .gradient-harvest { background: linear-gradient(135deg, #B4741F 0%, #D4941F 100%); }
+  .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.85); }
+  .glass-dark { backdrop-filter: blur(12px); background: rgba(26,36,32,0.75); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

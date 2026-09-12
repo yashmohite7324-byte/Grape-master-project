@@ -1,0 +1,119 @@
+/* OrderButton.css */
+
+.order-btn-wrapper {
+  position: relative;
+  width: 100%;
+  height: 52px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #047857;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.4);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.order-btn-wrapper:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.5);
+}
+
+.order-btn-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  transition: opacity 0.3s ease;
+}
+
+.order-btn-wrapper.animating .order-btn-content {
+  opacity: 0;
+}
+
+/* Truck Track */
+.truck-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.order-btn-wrapper.animating .truck-track {
+  opacity: 1;
+}
+
+.truck-icon {
+  position: absolute;
+  left: -60px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-btn-wrapper.animating .truck-icon {
+  animation: truckDrive 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes truckDrive {
+  0% {
+    left: -60px;
+  }
+  30% {
+    left: 40%;
+  }
+  60% {
+    left: 45%;
+    transform: scale(1.05);
+  }
+  100% {
+    left: 110%;
+  }
+}
+
+.box-load {
+  position: absolute;
+  top: 14px;
+  left: 30%;
+  width: 20px;
+  height: 20px;
+  background: #f59e0b;
+  border-radius: 4px;
+  opacity: 0;
+}
+
+.order-btn-wrapper.animating .box-load {
+  animation: boxDrop 2.8s ease forwards;
+}
+
+@keyframes boxDrop {
+  0%, 25% {
+    opacity: 0;
+    transform: translateY(-20px) rotate(15deg);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(150px);
+  }
+}

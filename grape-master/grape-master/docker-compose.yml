@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: gm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: grape_master
+    ports:
+      - '5432:5432'
+    volumes:
+      - gm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis (pub/sub for real-time notifications + sessions) ──────
+  redis:
+    image: redis:7-alpine
+    container_name: gm-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - gm_redis:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Node.js Backend ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gm-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/grape_master
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-this-in-production-long-random-string
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:3000
+      ML_SERVICE_URL: http://ml:8000
+      PHONEPE_MERCHANT_ID: PGTESTPAYUAT
+      PHONEPE_SALT_KEY: your-phonepe-salt
+      PHONEPE_SALT_INDEX: 1
+      PHONEPE_HOST: https://api-preprod.phonepe.com/apis/pg-sandbox
+    ports:
+      - '3001:3001'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - gm_receipts:/app/receipts
+
+  # ── Python ML Service ───────────────────────────────────────────
+  ml:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: gm-ml
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/grape_master
+      ML_HOST: 0.0.0.0
+      ML_PORT: 8000
+      MODEL_PATH: /app/models/recommendation_model.pkl
+    ports:
+      - '8000:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - gm_models:/app/models
+
+  # ── Next.js Frontend ────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gm-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001
+      NEXT_PUBLIC_ML_URL: http://localhost:8000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+volumes:
+  gm_pgdata:
+  gm_redis:
+  gm_receipts:
+  gm_models:

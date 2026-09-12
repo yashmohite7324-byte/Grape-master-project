@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-paper: #f8fafc;
+    --text-ink: #0f172a;
+    --text-muted: #64748b;
+    --border-line: #e2e8f0;
+    --bg-card: #ffffff;
+  }
+
+  .dark {
+    --bg-paper: #0f172a;
+    --text-ink: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-line: #334155;
+    --bg-card: #1e293b;
+  }
+
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body {
+    background-color: var(--bg-paper);
+    color: var(--text-ink);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; filter: drop-shadow(0 10px 25px rgba(16, 185, 129, 0.3)); }
+}
+
+@layer utilities {
+  .bg-paper { background-color: var(--bg-paper); }
+  .text-ink { color: var(--text-ink); }
+  .text-muted { color: var(--text-muted); }
+  .border-line { border-color: var(--border-line); }
+  .bg-card-custom { background-color: var(--bg-card); }
+  .glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-line);
+  }
+  .card-hover { @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl; }
+
+  /* 2 Dashboard Color Gradient Animations */
+  .gradient-dashboard-1 {
+    background: linear-gradient(135deg, #052e16 0%, #047857 35%, #0d9488 70%, #10b981 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  .gradient-dashboard-2 {
+    background: linear-gradient(135deg, #312e81 0%, #4c1d95 35%, #059669 70%, #10b981 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+  }
+
+  .pulse-glow-card {
+    animation: pulseGlow 4s ease-in-out infinite;
+  }
+}
