@@ -166,6 +166,38 @@ export const getMyOffers = async (
   return { items, meta: pageMeta(page, total) }
 }
 
+/** All active market offers across all farmer listings (visible to all farmers). */
+export const getAllPublicOffers = async (page: PageParams) => {
+  const [items, total] = await Promise.all([
+    prisma.brokerOffer.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        broker: {
+          select: {
+            profile: { select: { fullName: true, district: true } },
+            brokerProfile: { select: { companyName: true } },
+          },
+        },
+        listing: {
+          select: {
+            id: true,
+            cropType: true,
+            variety: true,
+            unit: true,
+            expectedPrice: true,
+            quantity: true,
+            farmer: { select: { profile: { select: { fullName: true, district: true } } } },
+          },
+        },
+      },
+      ...toSkipTake(page),
+    }),
+    prisma.brokerOffer.count(),
+  ])
+
+  return { items, meta: pageMeta(page, total) }
+}
+
 /** Withdraw a still-pending offer. */
 export const withdrawOffer = async (brokerId: string, offerId: string) => {
   const offer = await prisma.brokerOffer.findUnique({ where: { id: offerId } })

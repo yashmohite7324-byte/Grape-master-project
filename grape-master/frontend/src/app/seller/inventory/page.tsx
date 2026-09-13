@@ -17,9 +17,15 @@ export default function SellerInventoryPage() {
     () => api.get<Product[]>('/seller/products', { limit: 100 }).then(r => r.data), []
   )
 
+  const getInv = (p: Product) => {
+    if (!p.inventory) return null
+    if (Array.isArray(p.inventory)) return p.inventory[0] ?? null
+    return p.inventory
+  }
+
   const products = data ?? []
-  const totalStock = products.reduce((s, p) => s + (p.inventory?.availableQuantity ?? 0), 0)
-  const totalValue = products.reduce((s, p) => s + (p.inventory?.availableQuantity ?? 0) * p.price, 0)
+  const totalStock = products.reduce((s, p) => s + (getInv(p)?.availableQuantity ?? 0), 0)
+  const totalValue = products.reduce((s, p) => s + (getInv(p)?.availableQuantity ?? 0) * p.price, 0)
 
   const startAdjust = (id: string, mode: 'add' | 'remove') =>
     setAdjusting(a => ({ ...a, [id]: { qty: '', mode } }))
@@ -28,11 +34,13 @@ export default function SellerInventoryPage() {
     const adj = adjusting[product.id]
     if (!adj || !adj.qty || Number(adj.qty) <= 0) { show('error', 'Enter a valid quantity'); return }
     setSaving(product.id)
+    const inv = getInv(product)
+    const targetId = inv?.id || product.id
     try {
-      await api.patch(`/seller/inventory/${product.inventory?.id ?? product.id}`, {
+      await api.patch(`/seller/inventory/${targetId}`, {
         adjustment: adj.mode === 'add' ? Number(adj.qty) : -Number(adj.qty),
       })
-      show('success', 'Stock updated')
+      show('success', 'Stock updated successfully')
       setAdjusting(a => { const n = { ...a }; delete n[product.id]; return n })
       refetch()
     } catch (err) {
@@ -66,8 +74,10 @@ export default function SellerInventoryPage() {
             </thead>
             <tbody className="divide-y divide-line">
               {products.map(p => {
-                const inv = p.inventory
+                const inv = getInv(p)
                 const adj = adjusting[p.id]
+                const avail = inv?.availableQuantity ?? 0
+                const reserved = inv?.reservedQuantity ?? 0
                 return (
                   <tr key={p.id} className="hover:bg-paper/50">
                     <td className="px-4 py-3">
@@ -76,10 +86,10 @@ export default function SellerInventoryPage() {
                     </td>
                     <td className="px-4 py-3 text-muted">{p.category}</td>
                     <td className="px-4 py-3 font-mono tabular-nums text-ink">{formatINR(p.price)}</td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-muted">{inv?.reservedQuantity ?? 0} {p.unit}</td>
+                    <td className="px-4 py-3 font-mono tabular-nums text-muted">{reserved} {p.unit}</td>
                     <td className="px-4 py-3">
-                      <span className={`font-mono font-semibold tabular-nums ${(inv?.availableQuantity ?? 0) <= 10 ? 'text-danger' : 'text-vine'}`}>
-                        {inv?.availableQuantity ?? 0} {p.unit}
+                      <span className={`font-mono font-bold tabular-nums ${avail <= 10 ? 'text-amber-600' : 'text-emerald-700'}`}>
+                        {avail} {p.unit}
                       </span>
                     </td>
                     <td className="px-4 py-3">

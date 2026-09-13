@@ -88,18 +88,33 @@ export const toggleProduct = async (sellerId: string, productId: string) => {
   })
 }
 
-// ─── Inventory ───
+export const adjustStock = async (sellerId: string, idOrProductId: string, adjustment: number) => {
+  let inv = await prisma.sellerInventory.findFirst({
+    where: { OR: [{ id: idOrProductId }, { productId: idOrProductId }], sellerId },
+  })
 
-export const adjustStock = async (sellerId: string, inventoryId: string, adjustment: number) => {
-  const inv = await prisma.sellerInventory.findUnique({ where: { id: inventoryId } })
-  if (!inv || inv.sellerId !== sellerId) throw AppError.notFound('Inventory record not found')
+  if (!inv) {
+    const product = await prisma.product.findUnique({ where: { id: idOrProductId } })
+    if (!product || product.sellerId !== sellerId) throw AppError.notFound('Product or Inventory record not found')
 
-  const newQty = inv.quantity + adjustment
-  const newAvail = inv.availableQuantity + adjustment
-  if (newAvail < 0) throw AppError.badRequest(`Cannot remove more than available stock (${inv.availableQuantity})`)
+    const initialQty = Math.max(0, adjustment)
+    inv = await prisma.sellerInventory.create({
+      data: {
+        sellerId,
+        productId: product.id,
+        quantity: initialQty,
+        availableQuantity: initialQty,
+        reservedQuantity: 0,
+      },
+    })
+    return inv
+  }
+
+  const newQty = Math.max(0, inv.quantity + adjustment)
+  const newAvail = Math.max(0, inv.availableQuantity + adjustment)
 
   return prisma.sellerInventory.update({
-    where: { id: inventoryId },
+    where: { id: inv.id },
     data: { quantity: newQty, availableQuantity: newAvail },
   })
 }

@@ -34,6 +34,13 @@ export const getMyOffers = catchAsync(async (req: Request, res: Response) => {
   sendSuccess(res, items, 'Your offers', 200, meta)
 })
 
+export const getPublicOffers = catchAsync(async (req: Request, res: Response) => {
+  const pageNum = Number(req.query.page) || 1
+  const limitNum = Number(req.query.limit) || 20
+  const { items, meta } = await brokerService.getAllPublicOffers({ page: pageNum, limit: limitNum })
+  sendSuccess(res, items, 'Public market offers', 200, meta)
+})
+
 export const withdrawOffer = catchAsync(async (req: Request, res: Response) => {
   const offer = await brokerService.withdrawOffer(req.user!.id, req.params.id)
   sendSuccess(res, offer, 'Offer withdrawn')

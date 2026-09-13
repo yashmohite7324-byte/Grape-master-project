@@ -14,9 +14,10 @@ import { paginationQuery } from '../../utils/pagination'
 
 const router = Router()
 
-// Marketplace (farmer produce) — accessible by any logged in user (Customer, Farmer, Broker, Admin)
+// Marketplace (farmer produce) & Public Bids — accessible by any logged in user
 router.get('/marketplace', authenticate, validate(marketplaceQuerySchema), controller.browseMarketplace)
 router.get('/marketplace/:id', authenticate, validate(listingIdSchema), controller.getMarketplaceListing)
+router.get('/public-offers', authenticate, controller.getPublicOffers)
 
 // Require BROKER role for bidding and inventory management
 router.use(authenticate, authorize('BROKER'))
