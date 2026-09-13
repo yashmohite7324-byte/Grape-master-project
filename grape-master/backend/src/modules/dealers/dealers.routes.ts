@@ -34,18 +34,24 @@ router.get(
     const { latitude, longitude, pincode } = req.query as { latitude?: number, longitude?: number, pincode?: string }
 
     // Fetch all dealers (FertilizerSellerProfile) with their linked user profiles (for coordinates)
-    const dealers = await prisma.fertilizerSellerProfile.findMany({
+    const sellers = await prisma.user.findMany({
+      where: { role: 'FERTILIZER_SELLER' },
       include: {
-        user: {
-          include: {
-            profile: true,
-            sellerInventory: {
-              include: { product: true }
-            }
-          }
+        profile: true,
+        sellerProfile: true,
+        sellerInventory: {
+          include: { product: true }
         }
       }
     })
+
+    const dealers = sellers.map(s => ({
+      id: s.sellerProfile?.id || s.id,
+      userId: s.id,
+      sellerName: s.sellerProfile?.sellerName || s.profile?.fullName || 'Agri Dealer',
+      companyName: s.sellerProfile?.companyName || 'Agri Inputs Store',
+      user: s
+    }))
 
     if (dealers.length === 0) {
       sendSuccess(res, null, 'No dealers available')
@@ -61,9 +67,6 @@ router.get(
     let nearestDealer = dealers[0]
     let minDistance = Infinity
 
-    // If pincode is provided but no lat/lng, we could ideally geocode it.
-    // For now, we will try to match exact pincode or fallback to Haversine with lat/lng.
-    
     if (latitude && longitude) {
       for (const dealer of dealers) {
         const dLat = dealer.user?.profile?.latitude
@@ -77,14 +80,12 @@ router.get(
         }
       }
     } else if (pincode) {
-      // Pincode fallback: try to find a dealer in the same pincode
       const exactMatch = dealers.find(d => d.user?.profile?.pincode === pincode)
       if (exactMatch) {
         nearestDealer = exactMatch
-        minDistance = 2 // arbitrary close distance
+        minDistance = 2
       } else {
-        // Just return the first one as a generic fallback if no match
-        minDistance = 50 
+        minDistance = 50
       }
     }
 
