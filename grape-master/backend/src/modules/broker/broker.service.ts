@@ -118,6 +118,8 @@ export const makeOffer = async (
       quantity: input.quantity,
       offerPrice: input.offerPrice,
       totalAmount,
+      discountPercent: input.discountPercent ?? 0,
+      discountMinQty: input.discountMinQty ?? 0,
       message: input.message,
     },
   })

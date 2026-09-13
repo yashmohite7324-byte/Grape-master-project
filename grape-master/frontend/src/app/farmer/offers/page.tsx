@@ -95,6 +95,13 @@ export default function FarmerOffersPage() {
                     Offer: <span className="font-bold text-emerald-700">{formatINR(o.offerPrice)} / {o.listing?.unit ?? 'unit'}</span> ({formatQty(o.quantity, o.listing?.unit ?? '')}) ={' '}
                     <span className="font-extrabold text-ink">{formatINR(o.totalAmount)}</span>
                   </p>
+
+                  {(o.discountPercent ?? 0) > 0 && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 border border-amber-300">
+                      🎁 {o.discountPercent}% Bulk Discount Offered for orders ≥ {o.discountMinQty ?? 1} {o.listing?.unit ?? 'units'}!
+                    </div>
+                  )}
+
                   <p className="mt-1 text-xs text-muted">
                     Broker: <span className="font-semibold text-slate-800">{o.broker?.brokerProfile?.companyName || o.broker?.brokerProfile?.brokerName || o.broker?.profile?.fullName || 'Broker Firm'}</span>
                     {o.broker?.profile?.district ? ` (${o.broker.profile.district})` : ''} · {formatDate(o.createdAt)}

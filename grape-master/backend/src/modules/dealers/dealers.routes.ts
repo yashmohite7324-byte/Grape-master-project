@@ -109,20 +109,53 @@ router.get(
       }
     })
 
-    const defaultCoords = [
+    const districtCoordsMap: Record<string, { lat: number; lng: number }> = {
+      nashik: { lat: 20.0063, lng: 73.7898 },
+      pune: { lat: 18.5204, lng: 73.8567 },
+      sangli: { lat: 16.8524, lng: 74.5815 },
+      kolhapur: { lat: 16.7050, lng: 74.2433 },
+      satara: { lat: 17.6805, lng: 74.0183 },
+      solapur: { lat: 17.6599, lng: 75.9064 },
+      ahmednagar: { lat: 19.0948, lng: 74.7480 },
+      ahilyanagar: { lat: 19.0948, lng: 74.7480 },
+      aurangabad: { lat: 19.8762, lng: 75.3433 },
+      sambhajinagar: { lat: 19.8762, lng: 75.3433 },
+      nagpur: { lat: 21.1458, lng: 79.0882 },
+      amravati: { lat: 20.9374, lng: 77.7796 },
+      mumbai: { lat: 19.0760, lng: 72.8777 },
+      latur: { lat: 18.4088, lng: 76.5604 },
+      nanded: { lat: 19.1383, lng: 77.3210 },
+      jalgaon: { lat: 21.0077, lng: 75.5626 },
+      dhule: { lat: 20.9042, lng: 74.7749 },
+      ratnagiri: { lat: 16.9902, lng: 73.3120 },
+    }
+
+    const defaultCoordsList = [
       { lat: 20.0063, lng: 73.7898 }, // Nashik
       { lat: 18.5204, lng: 73.8567 }, // Pune
-      { lat: 19.8762, lng: 75.3433 }, // Aurangabad
+      { lat: 19.8762, lng: 75.3433 }, // Sambhajinagar
       { lat: 16.8524, lng: 74.5815 }, // Sangli
-      { lat: 19.0760, lng: 72.8777 }, // Mumbai
-      { lat: 20.9374, lng: 77.7796 }, // Amravati
+      { lat: 17.6805, lng: 74.0183 }, // Satara
+      { lat: 16.7050, lng: 74.2433 }, // Kolhapur
     ]
 
     const pins = users.map((u, idx) => {
       const p = u.profile
-      const coords = defaultCoords[idx % defaultCoords.length]
-      const lat = p?.latitude ?? coords.lat
-      const lng = p?.longitude ?? coords.lng
+      const distName = (p?.district || p?.village || '').toLowerCase().trim()
+      
+      let matched = districtCoordsMap[distName]
+      if (!matched && distName) {
+        for (const [key, val] of Object.entries(districtCoordsMap)) {
+          if (distName.includes(key) || key.includes(distName)) {
+            matched = val
+            break
+          }
+        }
+      }
+
+      const fallback = defaultCoordsList[idx % defaultCoordsList.length]
+      const lat = p?.latitude ?? matched?.lat ?? fallback.lat
+      const lng = p?.longitude ?? matched?.lng ?? fallback.lng
       const name = p?.fullName || u.email || 'Registered User'
 
       let detail = ''

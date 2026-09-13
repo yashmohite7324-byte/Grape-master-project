@@ -22,6 +22,8 @@ export const makeOfferSchema = z.object({
   body: z.object({
     quantity: z.number().positive('Quantity must be greater than 0'),
     offerPrice: z.number().positive('Offer price must be greater than 0'),
+    discountPercent: z.number().min(0).max(100).optional(),
+    discountMinQty: z.number().min(0).optional(),
     message: z.string().max(500).optional(),
   }),
 })

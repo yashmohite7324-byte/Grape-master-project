@@ -55,6 +55,7 @@ export interface FarmerListing {
 export interface BrokerOffer {
   id: string; listingId: string; brokerId: string
   quantity: number; offerPrice: number; totalAmount: number
+  discountPercent?: number | null; discountMinQty?: number | null
   status: OfferStatus; message: string | null; createdAt: string
   listing?: Partial<FarmerListing> & { farmer?: { profile: Profile | null } }
   broker?: { id: string; profile: Profile | null; brokerProfile?: BrokerProfileData | null }

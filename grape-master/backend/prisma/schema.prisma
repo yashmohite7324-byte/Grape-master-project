@@ -241,16 +241,18 @@ model FarmerListing {
 }
 
 model BrokerOffer {
-  id          String            @id @default(auto()) @map("_id") @db.ObjectId
-  listingId   String            @db.ObjectId
-  brokerId    String            @db.ObjectId
-  quantity    Float
-  offerPrice  Float
-  totalAmount Float
-  status      BrokerOfferStatus @default(PENDING)
-  message     String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  listingId       String            @db.ObjectId
+  brokerId        String            @db.ObjectId
+  quantity        Float
+  offerPrice      Float
+  totalAmount     Float
+  discountPercent Float?            @default(0)
+  discountMinQty  Float?
+  status          BrokerOfferStatus @default(PENDING)
+  message         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   listing        FarmerListing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
   broker         User            @relation(fields: [brokerId], references: [id], onDelete: Cascade)
@@ -305,16 +307,16 @@ model Product {
   name        String
   description String?
   category    String
-  productType ProductType @default(FERTILIZER)
   brand       String?
   unit        String
   price       Float
-  isActive    Boolean     @default(true)
   images      String[]
+  isActive    Boolean     @default(true)
+  productType ProductType @default(FERTILIZER)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  seller          User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller          User              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   inventory       SellerInventory[]
   orderItems      OrderItem[]
   recommendations Recommendation[]
@@ -360,13 +362,13 @@ model Order {
   paymentStatus     PaymentStatus     @default(PENDING)
   orderStatus       OrderStatus       @default(PENDING_PAYMENT)
   fulfillmentMethod FulfillmentMethod
-  shippingAddressId String            @db.ObjectId
+  shippingAddressId String?           @db.ObjectId
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
   buyer           User         @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
   seller          User         @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
-  shippingAddress Address      @relation(fields: [shippingAddressId], references: [id])
+  shippingAddress Address?     @relation(fields: [shippingAddressId], references: [id])
   orderItems      OrderItem[]
   payment         Payment?
   transaction     Transaction?

@@ -27,6 +27,9 @@ export default function MarketplaceListingPage() {
   const [submitting, setSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
+  const [discountPercent, setDiscountPercent] = useState('')
+  const [discountMinQty, setDiscountMinQty] = useState('')
+
   const total =
     Number(quantity) > 0 && Number(offerPrice) > 0 ? Number(quantity) * Number(offerPrice) : 0
 
@@ -38,9 +41,11 @@ export default function MarketplaceListingPage() {
       await api.post(`/broker/marketplace/${id}/offer`, {
         quantity: Number(quantity),
         offerPrice: Number(offerPrice),
+        discountPercent: Number(discountPercent) || 0,
+        discountMinQty: Number(discountMinQty) || 0,
         message: message || undefined,
       })
-      show('success', 'Offer submitted')
+      show('success', 'Offer with Bulk Discount created!')
       router.push('/broker/offers')
     } catch (err) {
       if (err instanceof ApiError && err.fields) {
@@ -111,6 +116,34 @@ export default function MarketplaceListingPage() {
                 onChange={(e) => setOfferPrice(e.target.value)}
               />
             </Field>
+          </div>
+
+          {/* Bulk Quantity Discount Creation */}
+          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
+            <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+              🎁 Offer Bulk Quantity Discount to Farmer (Optional)
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Discount Percent (%)" hint="e.g. 5% or 10% discount">
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 5"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                />
+              </Field>
+              <Field label={`Minimum Quantity for Discount (${data.unit})`} hint="e.g. if farmer sells >= 50 units">
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 50"
+                  value={discountMinQty}
+                  onChange={(e) => setDiscountMinQty(e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
 
           <Field label="Message" hint="Optional note to the farmer">
