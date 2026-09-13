@@ -55,7 +55,12 @@ export default function SellerOrdersPage() {
                   <td className="px-4 py-3 font-mono tabular-nums text-ink">{formatINR(o.totalAmount)}</td>
                   <td className="px-4 py-3 text-muted">{o.fulfillmentMethod}</td>
                   <td className="px-4 py-3"><Pill className={statusStyle[o.orderStatus]}>{o.orderStatus.replace('_', ' ')}</Pill></td>
-                  <td className="px-4 py-3"><Link href={`/seller/orders/${o.id}`} className="text-vine hover:underline">View</Link></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Link href={`/seller/orders/${o.id}`} className="text-vine hover:underline text-xs font-semibold">View</Link>
+                      <Link href={`/orders/${o.id}/receipt`} className="text-slate-700 hover:text-black text-xs font-bold bg-slate-100 px-2 py-1 rounded border border-slate-200">Receipt 📄</Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

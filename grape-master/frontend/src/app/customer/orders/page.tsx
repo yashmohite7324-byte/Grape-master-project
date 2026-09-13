@@ -24,20 +24,25 @@ export default function CustomerOrdersPage() {
       ) : (
         <div className="space-y-3">
           {(data ?? []).map(o => (
-            <Link key={o.id} href={`/customer/orders/${o.id}`}>
-              <Card className="flex items-center justify-between p-5 hover:border-vine transition-colors">
+            <Card key={o.id} className="p-5 hover:border-vine transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="font-mono text-sm font-medium text-ink">{o.orderNumber}</p>
-                  <p className="mt-0.5 text-xs text-muted">
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono text-sm font-bold text-ink">{o.orderNumber}</p>
+                    <Pill className={statusStyle[o.orderStatus]}>{o.orderStatus.replace('_', ' ')}</Pill>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
                     {formatDate(o.createdAt)} · {o.fulfillmentMethod} · {o.orderItems.length} item{o.orderItems.length !== 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono tabular-nums text-ink">{formatINR(o.totalAmount)}</span>
-                  <Pill className={statusStyle[o.orderStatus]}>{o.orderStatus.replace('_', ' ')}</Pill>
+                  <span className="font-mono text-base font-bold text-ink">{formatINR(o.totalAmount)}</span>
+                  <Link href={`/orders/${o.id}/receipt`} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-black transition">
+                    📄 Receipt
+                  </Link>
                 </div>
-              </Card>
-            </Link>
+              </div>
+            </Card>
           ))}
         </div>
       )}

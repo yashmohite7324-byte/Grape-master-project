@@ -47,20 +47,20 @@ export default function ReceiptPage() {
       `}</style>
 
       {/* Toolbar */}
-      <div className="no-print sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-white px-4 py-3">
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-          <ArrowLeft className="h-4 w-4" /> Back
+      <div className="no-print sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-white px-4 py-3 shadow-sm">
+        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-black">
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
         </button>
         <div className="flex-1" />
-        <button onClick={handlePrint} className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-paper">
-          <Printer className="h-4 w-4" /> Print
+        <button onClick={handlePrint} className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-50 shadow-sm">
+          <Printer className="h-4 w-4" /> Print Receipt
         </button>
-        <a
-          href={`/api/orders/${id}/receipt.pdf`}
-          className="flex items-center gap-1.5 rounded-lg bg-vine px-3 py-1.5 text-sm font-medium text-white hover:bg-vine-deep"
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-700 shadow transition"
         >
-          <Download className="h-4 w-4" /> Download PDF
-        </a>
+          <Download className="h-4 w-4" /> Download PDF Receipt
+        </button>
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-10">

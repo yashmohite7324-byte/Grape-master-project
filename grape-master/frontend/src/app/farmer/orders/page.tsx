@@ -61,13 +61,20 @@ export default function FarmerOrdersPage() {
               </div>
 
               {/* Items List */}
-              <div className="space-y-2">
+              <div className="space-y-2 mb-4">
                 {(o.orderItems ?? []).map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between text-xs py-1 px-3 rounded-lg bg-slate-50">
+                  <div key={item.id} className="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg bg-slate-50">
                     <span className="font-semibold text-slate-800">{item.product?.name ?? 'Fertilizer Input'}</span>
                     <span className="font-mono text-slate-600">{item.quantity} x {formatINR(item.unitPrice)}</span>
                   </div>
                 ))}
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <span className="text-xs text-slate-500 font-medium">Status: <strong className="text-slate-800">Payment Completed</strong></span>
+                <Link href={`/orders/${o.id}/receipt`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-black transition shadow-sm">
+                  📄 Download Receipt
+                </Link>
               </div>
             </Card>
           ))}
